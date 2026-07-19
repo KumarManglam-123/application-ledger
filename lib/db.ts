@@ -15,11 +15,16 @@ declare global {
   var __jobTrackerDb: Database.Database | undefined;
 }
 
-const dataDir = path.join(process.cwd(), "data");
+// Vercel's serverless functions run on a read-only filesystem — only /tmp
+// is writable, and it doesn't persist between invocations. Locally, we keep
+// using a real ./data folder so the SQLite file survives across dev restarts.
+const dataDir = process.env.VERCEL
+  ? "/tmp"
+  : path.join(process.cwd(), "data");
+
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
-
 const dbPath = path.join(dataDir, "applications.db");
 
 export const db = global.__jobTrackerDb ?? new Database(dbPath);
